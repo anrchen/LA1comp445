@@ -111,10 +111,8 @@ const client = net.createConnection({
     port: 80
 });
 
-client.on('data', buf => {
-    //TODO: -v verbose
-    console.log(buf.toString());
-
+client.on('data',function(data) {
+	console.log(data.toString());
 });
 
 client.on('connect', () => {
