@@ -7,7 +7,7 @@ const yargs = require('yargs');
 const argv = yargs.usage('node client.js (get|post) [-v] (-h "k:v")* [-d inline-data] [-f file] URL')
     .default('host', 'httpbin.org')
     .default('port', 80)
-    .default('path', '/status/418')
+    .default('path', '/get?course=networking&assignment=1')
     .default('get', 1)
     .help('help')
     .argv;
@@ -58,6 +58,7 @@ if (process.argv[2] == 'help') {
 
 
 //handle get
+if (process.argv.length>3){
 if (process.argv[2].toLowerCase() == "get") {
     console.log('node client.js get [-v] [-h key:value] URL');
     var type = "GET";
@@ -91,6 +92,10 @@ if (process.argv[2].toLowerCase() == "get") {
     var clientWritingString = type+" " + urlObj.path + " HTTP/1.0 \nHost: " + urlObj.host + "\n"+ additHeaderParams +"\n";
     console.log(clientWritingString);
 }
+} else {
+    console.log("params busted");
+    process.exit(-1);
+}
 /*
 //verify the input
 if (!(process.argv[2] == 'get' || process.argv[2] == 'post')) {
@@ -115,8 +120,8 @@ client.on('data', buf => {
 
 client.on('connect', () => {
     if (argv.get == 1) {
-       // client.write(clientWritingString);
-        client.write("GET " + argv.path + " HTTP/1.0 \n Host: " + argv.host + "\naaaaa: bbbbb\n\n");
+        client.write(clientWritingString);
+       // client.write("GET " + argv.path + " HTTP/1.0 \n Host: " + argv.host + "\naaaaa: bbbbb\n\n");
     } else {
         client.write("POST /post HTTP/1.0\nHost: httpbin.org\ncontent-type: application/json\naaaaa: bbbbb\ncontent-length: 23\n\n{\"mapName\":\"myMapName\"}\n");
     }
