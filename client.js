@@ -2,6 +2,7 @@
 
 const net = require('net');
 const yargs = require('yargs');
+    var url = require('url');
 
 const argv = yargs.usage('node client.js (get|post) [-v] (-h "k:v")* [-d inline-data] [-f file] URL')
     .default('host', 'httpbin.org')
@@ -61,8 +62,10 @@ if (process.argv[2].toLowerCase() == "get") {
     console.log('node client.js get [-v] [-h key:value] URL');
     var type = "GET";
     var verbose = (process.argv[3].toLowerCase() == "-v");
-    var url = process.argv[process.argv.length - 1];
     var additHeaderParams = "";
+    //parse the URL
+    var urlToParse = process.argv[process.argv.length - 1];
+    var urlObj = url.parse(urlToParse);
 
     //handle the remaining -h
     var numberParamsNoH = 4;
@@ -74,7 +77,8 @@ if (process.argv[2].toLowerCase() == "get") {
         console.log("An invalid number of parameters was passed.")
         process.exit(-1);
     }
-
+    
+    //process the -h*
     while (process.argv.length - numberParamsNoH > 0) {
         if (process.argv[numberParamsNoH - 1].toLowerCase() != "-h") {
             console.log("An invalid pair was specified in the -h key:value Associates headers.")
@@ -84,8 +88,8 @@ if (process.argv[2].toLowerCase() == "get") {
         numberParamsNoH++;
         numberParamsNoH++;
     }
-    console.log(additHeaderParams);
-
+    var clientWritingString = type+" " + urlObj.path + " HTTP/1.0 \nHost: " + urlObj.host + "\n"+ additHeaderParams +"\n";
+    console.log(clientWritingString);
 }
 /*
 //verify the input
@@ -111,6 +115,7 @@ client.on('data', buf => {
 
 client.on('connect', () => {
     if (argv.get == 1) {
+       // client.write(clientWritingString);
         client.write("GET " + argv.path + " HTTP/1.0 \n Host: " + argv.host + "\naaaaa: bbbbb\n\n");
     } else {
         client.write("POST /post HTTP/1.0\nHost: httpbin.org\ncontent-type: application/json\naaaaa: bbbbb\ncontent-length: 23\n\n{\"mapName\":\"myMapName\"}\n");
