@@ -111,8 +111,25 @@ const client = net.createConnection({
     port: 80
 });
 
-client.on('data',function(data) {
-	console.log(data.toString());
+client.on('data', function (data) {
+    if (verbose) {
+        console.log(data.toString());
+    } else {
+        var responseSplit = data.toString().split("\n");
+        var inBody = false;
+        for (var i in responseSplit) {
+            if (responseSplit[i] == "{") {
+                inBody = true;
+            }
+            if (inBody) {
+                console.log(responseSplit[i]);
+            }
+
+            if (responseSplit[i] == "}") {
+                inBody = false;
+            }
+        }
+    }
 });
 
 client.on('connect', () => {
