@@ -49,6 +49,7 @@ if (process.argv[2] == 'help') {
 
 if (process.argv.length > 3) {
     //handle get
+    var additHeaderParams = "User-Agent:Concordia-HTTP/1.0\n";
     var isGet,type;
     if (process.argv[2].toLowerCase() == "get") {
         isGet = true;
@@ -57,11 +58,11 @@ if (process.argv.length > 3) {
         //parse the URL
         isGet = false;
         type = "POST";
+        additHeaderParams = additHeaderParams + "content-type: application/json\n";
     } else {
         quitInvalidParamError();
     }
     var verbose = (process.argv[3].toLowerCase() == "-v");
-    var additHeaderParams = "";
     //parse the URL
     var urlToParse = process.argv[process.argv.length - 1];
     var urlObj = url.parse(urlToParse);
@@ -95,18 +96,16 @@ if (process.argv.length > 3) {
         var inlineDataParam = "";
         //process the -d
         if (process.argv[numberParamsNoH - 1].toLowerCase() == "-d") {
-            inlineDataParam = process.argv[numberParamsNoH] + "\n";
-            numberParamsNoH++;
-            numberParamsNoH++;
+            inlineDataParam = process.argv[numberParamsNoH];
+        } else if (process.argv[numberParamsNoH - 1].toLowerCase() == "-f") {
+            //inlineDataParam = process.argv[numberParamsNoH] + "\n";
+        } else {
+            quitInvalidParamError();
         }
-        //process the -f TODO
-        if (process.argv[numberParamsNoH - 1].toLowerCase() == "-f") {
-            /*inlineDataParam = process.argv[numberParamsNoH] + "\n";
-            numberParamsNoH++;
-            numberParamsNoH++;*/
-        }
+        additHeaderParams = additHeaderParams + "content-length: "+inlineDataParam.length + "\n\n"+inlineDataParam;
     }
-    var clientWritingString = type + " " + urlObj.path + " HTTP/1.0 \nHost: " + urlObj.host + "\nUser-Agent:Concordia-HTTP/1.0\n" + additHeaderParams + "\n";
+    var clientWritingString = type + " " + urlObj.path + " HTTP/1.0 \nHost: " + urlObj.host + "\n" + additHeaderParams + "\n";
+  //  clientWritingString = "POST /post HTTP/1.0\nHost: httpbin.org\ncontent-type: application/json\naaaaa: bbbbb\ncontent-length: "+inlineDataParam.length+"\n\n"+inlineDataParam+"\n";
 
 } else {
     quitInvalidParamError();
