@@ -1,16 +1,7 @@
 'use strict';
 
 const net = require('net');
-//const yargs = require('yargs');
 var url = require('url');
-
-/*const argv = yargs.usage('node client.js (get|post) [-v] (-h "k:v")* [-d inline-data] [-f file] URL')
-    .default('host', 'httpbin.org')
-    .default('port', 80)
-    .default('path', '/get?course=networking&assignment=1')
-    .default('get', 1)
-    .help('help')
-    .argv;*/
 
 //if help only
 if (process.argv[2] == 'help') {
@@ -58,42 +49,67 @@ if (process.argv[2] == 'help') {
 
 if (process.argv.length > 3) {
     //handle get
-    var isGet;
+    var isGet,type;
     if (process.argv[2].toLowerCase() == "get") {
         isGet = true;
-        var type = "GET";
-        var verbose = (process.argv[3].toLowerCase() == "-v");
-        var additHeaderParams = "";
+        type = "GET";
+    } else if (process.argv[2].toLowerCase() == "post") {
         //parse the URL
-        var urlToParse = process.argv[process.argv.length - 1];
-        var urlObj = url.parse(urlToParse);
-
-        //handle the remaining -h
-        var numberParamsNoH = 4;
-        if (verbose) {
-            numberParamsNoH++;
-        }
-        //if there is not an even humber of [-h key:value] left, quit
-        if ((process.argv.length - numberParamsNoH) % 2 != 0) {
-            console.log("An invalid number of parameters was passed.")
-            process.exit(-1);
-        }
-
-        //process the -h*
-        while (process.argv.length - numberParamsNoH > 0) {
-            if (process.argv[numberParamsNoH - 1].toLowerCase() != "-h") {
-                console.log("An invalid pair was specified in the -h key:value Associates headers.")
-                process.exit(-1);
-            }
-            additHeaderParams = additHeaderParams + process.argv[numberParamsNoH] + "\n";
-            numberParamsNoH++;
-            numberParamsNoH++;
-        }
-        var clientWritingString = type + " " + urlObj.path + " HTTP/1.0 \nHost: " + urlObj.host + "\n" + additHeaderParams + "\n";
+        isGet = false;
+        type = "POST";
+    } else {
+        quitInvalidParamError();
     }
+    var verbose = (process.argv[3].toLowerCase() == "-v");
+    var additHeaderParams = "";
+    //parse the URL
+    var urlToParse = process.argv[process.argv.length - 1];
+    var urlObj = url.parse(urlToParse);
+
+    //handle the remaining -h
+    var numberParamsNoH = 4;
+    if (verbose) {
+        numberParamsNoH++;
+    }
+    //if there is not an even humber of [-h key:value] left in GET, quit
+    //or even number of [-h key:value] [-d inline-data] [-f file] in the case of POST
+    if ((process.argv.length - numberParamsNoH) % 2 != 0) {
+        quitInvalidParamError();
+    }
+
+    //process the -h*
+    while (process.argv.length - numberParamsNoH > 0) {
+        if (process.argv[numberParamsNoH - 1].toLowerCase() != "-h") {
+            if (isGet){
+                quitInvalidParamError();
+            } else {
+                break;
+            }
+        }
+        additHeaderParams = additHeaderParams + process.argv[numberParamsNoH] + "\n";
+        numberParamsNoH++;
+        numberParamsNoH++;
+    }
+    
+    if (!isGet){
+        var inlineDataParam = "";
+        //process the -d
+        if (process.argv[numberParamsNoH - 1].toLowerCase() == "-d") {
+            inlineDataParam = process.argv[numberParamsNoH] + "\n";
+            numberParamsNoH++;
+            numberParamsNoH++;
+        }
+        //process the -f TODO
+        if (process.argv[numberParamsNoH - 1].toLowerCase() == "-f") {
+            /*inlineDataParam = process.argv[numberParamsNoH] + "\n";
+            numberParamsNoH++;
+            numberParamsNoH++;*/
+        }
+    }
+    var clientWritingString = type + " " + urlObj.path + " HTTP/1.0 \nHost: " + urlObj.host + "\nUser-Agent:Concordia-HTTP/1.0\n" + additHeaderParams + "\n";
+
 } else {
-    console.log("params busted");
-    process.exit(-1);
+    quitInvalidParamError();
 }
 /*
 //verify the input
@@ -133,15 +149,20 @@ client.on('data', function (data) {
 });
 
 client.on('connect', () => {
-    if (isGet) {
+    //if (isGet) {
         client.write(clientWritingString);
         // client.write("GET " + argv.path + " HTTP/1.0 \n Host: " + argv.host + "\naaaaa: bbbbb\n\n");
-    } else {
-        client.write("POST /post HTTP/1.0\nHost: httpbin.org\ncontent-type: application/json\naaaaa: bbbbb\ncontent-length: 23\n\n{\"mapName\":\"myMapName\"}\n");
-    }
+   // } else {
+  //      client.write("POST /post HTTP/1.0\nHost: httpbin.org\ncontent-type: application/json\naaaaa: bbbbb\ncontent-length: 23\n\n{\"mapName\":\"myMapName\"}\n");
+  //  }
 });
 
 client.on('error', err => {
     console.log('socket error %j', err);
-    process.exit(-1);
+    process.exit(0);
 });
+
+function quitInvalidParamError() {
+    console.log('httpc (get|post) [-v] (-h "k:v")* [-d inline-data] [-f file] URL');
+    process.exit(0);
+}
