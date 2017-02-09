@@ -124,18 +124,14 @@ client.on('data', function (data) {
         console.log(data.toString());
     } else {
         //get rid of the head of the response if not verbose mode
-        var responseSplit = data.toString().split("\n");
+        var responseSplit = data.toString().split("\r\n");
         var inBody = false;
         for (var i in responseSplit) {
-            if (responseSplit[i] == "{") {
+            if (responseSplit[i] == "") {
                 inBody = true;
             }
             if (inBody) {
                 console.log(responseSplit[i]);
-            }
-
-            if (responseSplit[i] == "}") {
-                inBody = false;
             }
         }
     }
