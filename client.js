@@ -2,6 +2,7 @@
 
 const net = require('net');
 var url = require('url');
+var fs = require('fs');
 
 //if help only
 if (process.argv[2] == 'help') {
@@ -57,7 +58,6 @@ if (process.argv.length > 3) {
     } else if (process.argv[2].toLowerCase() == "post") {
         isGet = false;
         type = "POST";
-        headerParams = headerParams + "content-type: application/json\n";
     } else {
         quitInvalidParamError();
     }
@@ -81,7 +81,7 @@ if (process.argv.length > 3) {
     while (process.argv.length - numberParamsNoH > 0) {
         if (process.argv[numberParamsNoH - 1].toLowerCase() != "-h") {
             //if its a get, or there is more than one pair left, quit
-            if (isGet || (process.argv.length - numberParamsNoH) !=2) {
+            if (isGet || (process.argv.length - numberParamsNoH) != 2) {
                 quitInvalidParamError();
             } else {
                 break;
@@ -97,12 +97,14 @@ if (process.argv.length > 3) {
         //process the -d
         if (process.argv[numberParamsNoH - 1].toLowerCase() == "-d") {
             inlineDataParam = process.argv[numberParamsNoH];
-        } else if (process.argv[numberParamsNoH - 1].toLowerCase() == "-f") {
-            //TODO
+        }
+        //process the -f
+        else if (process.argv[numberParamsNoH - 1].toLowerCase() == "-f") {
+            inlineDataParam = fs.readFileSync(process.argv[numberParamsNoH], 'utf8');
         } else {
             quitInvalidParamError();
         }
-        //add the content lenfth and inline data
+        //add the content length and inline data
         headerParams = headerParams + "content-length: " + inlineDataParam.length + "\n\n" + inlineDataParam;
     }
     //construct the request string
