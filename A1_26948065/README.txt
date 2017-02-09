@@ -1,7 +1,7 @@
 Tyler Ramsay #26948065
 LA1 Comp 445
 
-Make sure node is installed.
+Make sure node and all the dependencies are installed.
 
 To get a cURL like app, follow this installation:
     Add the following bash function in your .bash_profile, where
