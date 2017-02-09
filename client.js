@@ -45,7 +45,7 @@ if (process.argv[2] == 'help') {
         console.log('help prints this screen.');
         console.log('Use "httpc help [command]" for more information about a command.');
     }
-    process.exit(-1);
+    process.exit(0);
 }
 
 if (process.argv.length > 3) {
