@@ -2,6 +2,7 @@
 
 const net = require('net');
 const yargs = require('yargs');
+const fs = require('fs');
 
 const argv = yargs.usage('httpfs [-v] [-p PORT] [-d PATH-TO-DIR]')
     .describe('v', 'Prints debugging messages.')
@@ -14,61 +15,74 @@ const argv = yargs.usage('httpfs [-v] [-p PORT] [-d PATH-TO-DIR]')
 
 //set verbose
 var verbose = false;
-if (argv.v){
+if (argv.v) {
     verbose = true;
 }
 
 const server = net.createServer(handleClient)
     .on('error', err => {
-      throw err
+        throw err
     });
 
-server.listen({port: argv.p}, () => {
-  console.log('Time server is listening at %j', server.address());
+server.listen({
+    port: argv.p
+}, () => {
+    console.log('Server is listening at %j', server.address());
 });
 
 function handleClient(socket) {
-  console.log('New client from %j', socket.address());
+    console.log('New client from %j', socket.address());
     socket
-      .on('data', function (data) {
-        console.log(data.toString());
-    
-        var splitHeader = data.toString().split("\n");
-        var splitFirstLine = splitHeader[0].split(" ");
+        .on('data', function (data) {
+            if (verbose) console.log(data.toString());
+
+            var splitHeader = data.toString().split("\n");
+            var splitFirstLine = splitHeader[0].split(" ");
+
+            //get the type; get or post
+            var type = splitFirstLine[0];
         
-        var type = splitFirstLine[0];
-        var requestedPage = splitFirstLine[1];
-        
-        if (type.toLowerCase() == "get") {
-            if (requestedPage.toLowerCase() == "/"){
-                console.log("print out dir");
-                //TODO
+            //get the requested page path
+            var requestedPage = splitFirstLine[1];
+
+            var dataToWrite = "";
+
+            if (type.toLowerCase() == "get") {
+                if (requestedPage.toLowerCase() == "/") {
+                    dataToWrite = "Current list of files in the data directory:";
+                    var files = fs.readdirSync(argv.d);
+                    for (var i in files) {
+                        dataToWrite = dataToWrite + "\n" + files[i];
+                    }
+                    if (verbose) console.log(dataToWrite);
+                } else {
+                    console.log("return file if exists")
+                        //TODO
+                }
+            } else if (type.toLowerCase() == "post") {
+                if (requestedPage.toLowerCase() == "/") {
+                    console.log("error cant post to root");
+                    //TODO
+                } else {
+                    console.log("create or overwrite the file named");
+                    //TODO
+                }
+
+
             } else {
-               console.log("return file if exists") 
-               //TODO
-            }
-        } else if (type.toLowerCase() == "post"){
-            if (requestedPage.toLowerCase() == "/"){
-                console.log("error cant post to root");
+                console.log("error");
                 //TODO
-            } else {
-              console.log("create or overwrite the file named");
-            //TODO
             }
-            
-            
-        } else {
-            console.log("error");
-            //TODO
-        }
-        
-        
-        // just echo what received
-        socket.write(data.toString()+"HTTP/1.0 200 OK\r\nHEADER\r\n\r\nasdasdasdasasd");
-        socket.destroy();
-      })
-      .on('error', err => {
-        console.log('socket error %j', err);
-        socket.destroy();
-      });
+
+
+            // just echo what received
+            //data.toString()
+            //
+            socket.write("HTTP/1.0 200 OK\r\nHEADER\r\n\r\n" + dataToWrite);
+            socket.destroy();
+        })
+        .on('error', err => {
+            console.log('socket error %j', err);
+            socket.destroy();
+        });
 }
