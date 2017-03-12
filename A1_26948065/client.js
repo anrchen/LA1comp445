@@ -65,6 +65,11 @@ if (process.argv.length > 3) {
     //parse the URL
     var urlToParse = process.argv[process.argv.length - 1];
     var urlObj = url.parse(urlToParse);
+    if(urlObj.port==null){
+        urlObj.port=80;
+    } else {
+        urlObj.host = urlObj.host.split(":")[0];
+    }
 
     //handle the remaining -h, -d, -f
     var numberParamsNoH = 4;
@@ -117,7 +122,7 @@ if (process.argv.length > 3) {
 //create the connection
 const client = net.createConnection({
     host: urlObj.host,
-    port: 80
+    port: urlObj.port
 });
 
 //on receiving the data, print it
