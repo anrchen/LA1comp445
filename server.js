@@ -46,7 +46,14 @@ function handleClient(socket) {
             //get the requested page path
             var requestedPage = splitFirstLine[1];
 
-            var errorCode = "200 OK";
+            //for security only accept the file name when reading or writing
+            var file = argv.d + "/" + path.basename(requestedPage);
+
+            //the body of the request
+            var requestBody = data.toString().substr(data.toString().split("\n\n")[0].length + 1)
+            if (verbose) console.log(requestBody);
+
+            var errorCode = "";
             var dataToWrite = "";
 
             if (type.toLowerCase() == "get") {
@@ -54,16 +61,16 @@ function handleClient(socket) {
                     dataToWrite = "Current list of files in the data directory:";
                     var files = fs.readdirSync(argv.d);
                     for (var i in files) {
+                        errorCode = "200 OK";
                         dataToWrite = dataToWrite + "\n" + files[i];
                     }
                     if (verbose) console.log(dataToWrite);
                 } else {
                     //if requested a particular file
-                    //for security only accept the file name
-                    var file = argv.d + "/" + path.basename(requestedPage);
                     if (verbose) console.log(file);
                     try {
                         var fileContent = fs.readFileSync(file);
+                        errorCode = "200 OK";
                         dataToWrite = fileContent.toString();
                     } catch (err) {
                         dataToWrite = "Error: File not found";
@@ -73,24 +80,30 @@ function handleClient(socket) {
                 }
             } else if (type.toLowerCase() == "post") {
                 if (requestedPage.toLowerCase() == "/") {
-                    console.log("error cant post to root");
-                    //TODO
+                    errorCode = "400 Bad Request";
+                    dataToWrite = "Error: You can't post a file to the root.";
+                    if (verbose) console.log("Error: You can't post a file to the root.");
                 } else {
-                    console.log("create or overwrite the file named");
-                    //TODO
+                    try {
+                        fs.writeFileSync(file, requestBody);
+                        errorCode = "201 Created\nLocation:/" + path.basename(requestedPage);
+                        dataToWrite = "Success! file " + path.basename(requestedPage) + " has been created.";
+                    } catch (err) {
+                        dataToWrite = "Error: You do not have permission to perform that request.";
+                        errorCode = "403 Forbidden";
+                        if (verbose) console.log("Forbidden");
+                    }
                 }
 
 
             } else {
-                console.log("error");
-                //TODO
+                errorCode = "400 Bad Request";
+                dataToWrite = "Error: Bad request";
+                if (verbose) console.log("Error: Bad request");
             }
 
-
-            // just echo what received
-            //data.toString()
-            //
-            socket.write("HTTP/1.0 "+errorCode+"\r\n\r\n" + dataToWrite);
+            //write to the socket and destroy it
+            socket.write("HTTP/1.0 " + errorCode + "\r\n\r\n" + dataToWrite);
             socket.destroy();
         })
         .on('error', err => {
