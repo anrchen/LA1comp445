@@ -60,8 +60,8 @@ function handleClient(socket) {
                 if (requestedPage.toLowerCase() == "/") {
                     dataToWrite = "Current list of files in the data directory:";
                     var files = fs.readdirSync(argv.d);
+                    errorCode = "200 OK";
                     for (var i in files) {
-                        errorCode = "200 OK";
                         dataToWrite = dataToWrite + "\n" + files[i];
                     }
                     if (verbose) console.log(dataToWrite);
@@ -80,22 +80,20 @@ function handleClient(socket) {
                 }
             } else if (type.toLowerCase() == "post") {
                 if (requestedPage.toLowerCase() == "/") {
-                    errorCode = "400 Bad Request";
-                    dataToWrite = "Error: You can't post a file to the root.";
-                    if (verbose) console.log("Error: You can't post a file to the root.");
+                    errorCode = "403 Forbidden";
+                    dataToWrite = "Forbidden: You can't post a file to the root.";
+                    if (verbose) console.log("Forbidden: You can't post a file to the root.");
                 } else {
                     try {
                         fs.writeFileSync(file, requestBody);
                         errorCode = "201 Created\nLocation:/" + path.basename(requestedPage);
                         dataToWrite = "Success! file " + path.basename(requestedPage) + " has been created.";
                     } catch (err) {
-                        dataToWrite = "Error: You do not have permission to perform that request.";
+                        dataToWrite = "Forbidden: You do not have permission to perform that request.";
                         errorCode = "403 Forbidden";
-                        if (verbose) console.log("Forbidden");
+                        if (verbose) console.log("Forbidden: You do not have permission to perform that request.");
                     }
                 }
-
-
             } else {
                 errorCode = "400 Bad Request";
                 dataToWrite = "Error: Bad request";
