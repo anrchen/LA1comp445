@@ -3,6 +3,7 @@
 const net = require('net');
 const yargs = require('yargs');
 const fs = require('fs');
+const path = require('path');
 
 const argv = yargs.usage('httpfs [-v] [-p PORT] [-d PATH-TO-DIR]')
     .describe('v', 'Prints debugging messages.')
@@ -41,10 +42,11 @@ function handleClient(socket) {
 
             //get the type; get or post
             var type = splitFirstLine[0];
-        
+
             //get the requested page path
             var requestedPage = splitFirstLine[1];
 
+            var errorCode = "200 OK";
             var dataToWrite = "";
 
             if (type.toLowerCase() == "get") {
@@ -56,8 +58,18 @@ function handleClient(socket) {
                     }
                     if (verbose) console.log(dataToWrite);
                 } else {
-                    console.log("return file if exists")
-                        //TODO
+                    //if requested a particular file
+                    //for security only accept the file name
+                    var file = argv.d + "/" + path.basename(requestedPage);
+                    if (verbose) console.log(file);
+                    try {
+                        var fileContent = fs.readFileSync(file);
+                        dataToWrite = fileContent.toString();
+                    } catch (err) {
+                        dataToWrite = "Error: File not found";
+                        errorCode = "404 Not Found";
+                        if (verbose) console.log("File not found");
+                    }
                 }
             } else if (type.toLowerCase() == "post") {
                 if (requestedPage.toLowerCase() == "/") {
@@ -78,7 +90,7 @@ function handleClient(socket) {
             // just echo what received
             //data.toString()
             //
-            socket.write("HTTP/1.0 200 OK\r\nHEADER\r\n\r\n" + dataToWrite);
+            socket.write("HTTP/1.0 "+errorCode+"\r\n\r\n" + dataToWrite);
             socket.destroy();
         })
         .on('error', err => {
