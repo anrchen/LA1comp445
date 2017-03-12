@@ -36,7 +36,7 @@ function handleClient(socket) {
     socket
         .on('data', function (data) {
             if (verbose) console.log(data.toString());
-
+        
             var splitHeader = data.toString().split("\n");
             var splitFirstLine = splitHeader[0].split(" ");
 
@@ -45,10 +45,16 @@ function handleClient(socket) {
 
             //get the requested page path
             var requestedPage = splitFirstLine[1];
-
+            
+            //before doing anything, for security, reject a request if the file name is not for the current directory
+            if ("/"+path.basename(requestedPage)!=requestedPage){
+                socket.write("HTTP/1.0 403 Forbidden\r\n\r\n Forbidden: You can't work outside of the current directory.");
+                socket.destroy();
+                return;
+            }
             //for security only accept the file name when reading or writing
             var file = argv.d + "/" + path.basename(requestedPage);
-
+            
             //the body of the request
             var requestBody = data.toString().substr(data.toString().split("\n\n")[0].length + 1)
             if (verbose) console.log(requestBody);
