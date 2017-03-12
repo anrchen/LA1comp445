@@ -22,14 +22,11 @@ function handleClient(socket) {
     socket
       .on('data', buf => {
         // just echo what received
-        socket.write("asdasdasdasasd");
+        socket.write(buf+"HTTP/1.0 200 OK\r\nHEADER\r\n\r\nasdasdasdasasd");
         socket.destroy();
       })
       .on('error', err => {
         console.log('socket error %j', err);
-        socket.destroy();
-      })
-      .on('end', () => {
         socket.destroy();
       });
 }
