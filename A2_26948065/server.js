@@ -48,7 +48,7 @@ function handleClient(socket) {
             
             //before doing anything, for security, reject a request if the file name is not for the current directory
             if ("/"+path.basename(requestedPage)!=requestedPage){
-                socket.write("HTTP/1.0 403 Forbidden\r\n\r\n Forbidden: You can't work outside of the current directory.");
+                socket.write("HTTP/1.0 403 Forbidden\r\n\r\nForbidden: You can't work outside of the current directory.");
                 socket.destroy();
                 return;
             }
