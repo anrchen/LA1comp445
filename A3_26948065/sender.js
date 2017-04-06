@@ -13,7 +13,6 @@ var connectedUsers = [];
 
 server.on('listening', function () {
     var address = server.address();
-    //console.log('UDP Server listening on ' + address.address + ":" + address.port);
     console.log("Hello %s! Enter your name:", name);
 });
 
@@ -26,29 +25,25 @@ server.on('message', function (message, remote) {
         console.log("%s [%s]: %s", new Date(), sentName, sentMsg);
     } else if (sentCommand === "JOIN") {
         console.log("%s %s joined!", new Date(), sentName);
-        if (name !== "Guest"){
-                    sendMsg("", "PING");
+        if (name !== "Guest") {
+            sendMsg("", "PING");
         }
-        if (!connectedUsers.contains(sentName)){
+        if (!connectedUsers.contains(sentName)) {
             connectedUsers.push(sentName);
         }
     } else if (sentCommand == "LEAVE") {
         console.log("%s %s left!", new Date(), sentName);
-        connectedUsers.pop(sentName);
+        remove(connectedUsers, sentName);
         if (sentName === name) {
             sendMsg("", "QUIT");
         }
     } else if (sentCommand == "PING") {
-                if (!connectedUsers.contains(sentName)){
+        if (!connectedUsers.contains(sentName)) {
             connectedUsers.push(sentName);
         }
     }
-
-    //console.log(remote.address + ':' + remote.port + ' - ' + message);
-
 });
 
-//server.bind();
 server.bind(PORT, "", function () {
     server.setBroadcast(true);
 });
@@ -85,4 +80,13 @@ Array.prototype.contains = function (needle) {
         if (this[i] == needle) return true;
     }
     return false;
+}
+
+function remove(arr, what) {
+    var found = arr.indexOf(what);
+
+    while (found !== -1) {
+        arr.splice(found, 1);
+        found = arr.indexOf(what);
+    }
 }
